@@ -1,0 +1,140 @@
+# TestMCP Test Case Library — P0 (Critical / Launch Blockers)
+# These represent business-critical paths. A failure here blocks release.
+# Teams can edit, remove, or extend these cases. Custom cases can also be
+# added at runtime via the testmcp_add_test_case tool (saved to custom.yaml).
+
+test_cases:
+  - id: TC-P0-001
+    title: Basic VOD video playback starts and plays without errors
+    priority: P0
+    area: video-playback
+    platforms: [web, ios, android, ctv]
+    tags: [playback, vod, smoke]
+    preconditions: User is on a page/screen with playable VOD content.
+    steps:
+      - Select a VOD asset and initiate playback.
+      - Observe player load, pre-roll (if configured), and content start.
+      - Let content play for at least 60 seconds.
+      - Scrub forward and backward; pause and resume.
+    expected: >
+      Video starts within acceptable startup time, plays without fatal errors,
+      buffering spinners resolve, scrub/pause/resume work, audio and video stay in sync.
+    automation: automated-candidate
+
+  - id: TC-P0-002
+    title: Live stream playback works end-to-end with no errors
+    priority: P0
+    area: live-streaming
+    platforms: [web, ios, android, ctv]
+    tags: [playback, live, smoke]
+    preconditions: A live channel/event is currently streaming; user is entitled (or stream is free).
+    steps:
+      - Navigate to the live channel/event.
+      - Start the live stream.
+      - Watch for at least 2 minutes, including any SCTE ad-break transition if one occurs.
+      - Background/foreground the app (mobile) or switch tabs (web) and return.
+    expected: >
+      Live stream starts, remains stable, ad-break transitions are clean,
+      returning to the stream resumes at (or near) the live edge with no player crash.
+    automation: manual
+
+  - id: TC-P0-003
+    title: User can view and accept the Terms of Use / privacy policy
+    priority: P0
+    area: terms-compliance
+    platforms: [web, ios, android, ctv]
+    tags: [compliance, legal, onboarding]
+    preconditions: Fresh install or a state where ToU acceptance is required (new version of terms).
+    steps:
+      - Launch app / load site as a user who has not accepted the current terms.
+      - Verify the ToU / privacy prompt is displayed and text is readable and scrollable.
+      - Accept the terms.
+      - Relaunch and confirm the prompt does not reappear.
+    expected: >
+      Terms display correctly, acceptance is persisted, links to full legal
+      documents resolve, and declining (where applicable) behaves per spec.
+    automation: automated-candidate
+
+  - id: TC-P0-004
+    title: Core page/screen navigation works across primary surfaces
+    priority: P0
+    area: navigation-routing
+    platforms: [web, ios, android, ctv]
+    tags: [navigation, smoke]
+    preconditions: App/site loads to the home surface.
+    steps:
+      - Navigate through each primary nav item (Home, Shows/Sections, Live, Account, Search).
+      - Use back navigation at each step.
+      - On web, verify URL routing and browser back/forward behavior.
+      - On mobile, verify deep link into a detail screen and back out.
+    expected: >
+      Every primary surface renders without blank screens or crashes; back
+      navigation returns to the correct prior state; web URLs are correct and shareable.
+    automation: automated-candidate
+
+  - id: TC-P0-005
+    title: Analytics fire as expected on app launch and page view (Adobe)
+    priority: P0
+    area: analytics
+    platforms: [web, ios, android, ctv]
+    tags: [analytics, adobe, app-launch, page-view, third-party]
+    preconditions: Analytics debugging enabled (Adobe Experience Platform debugger, Charles/Proxyman, or logcat/console).
+    steps:
+      - Cold launch the app / load the site.
+      - Verify the Adobe App Launch / Lifecycle event fires exactly once with correct payload.
+      - Navigate to two distinct pages/screens.
+      - Inspect page view / screen view calls for correct page name, section, and user context variables.
+    expected: >
+      Launch and page/screen view beacons fire once per event (no duplicates,
+      no drops), payload variables match the tracking spec, and no PII appears
+      in beacons where prohibited.
+    automation: manual
+
+  - id: TC-P0-006
+    title: Video heartbeat / streaming analytics fire during playback
+    priority: P0
+    area: analytics
+    platforms: [web, ios, android, ctv]
+    tags: [analytics, adobe, heartbeat, video, third-party]
+    preconditions: Network inspection tooling attached; playable content available.
+    steps:
+      - Start VOD playback and verify media start beacon.
+      - Confirm heartbeat pings at the spec'd interval during play.
+      - Pause and verify pause state tracking; resume and verify.
+      - Complete or exit playback and verify media complete/close beacon.
+    expected: >
+      Media session events (start, play, pause, heartbeat, complete) fire in the
+      correct order with correct metadata (asset ID, title, length, stream type).
+    automation: manual
+
+  - id: TC-P0-007
+    title: User authentication — sign in and MVPD/TV-provider entitlement
+    priority: P0
+    area: auth
+    platforms: [web, ios, android, ctv]
+    tags: [auth, entitlement, smoke]
+    preconditions: Valid test account (and test MVPD credentials where applicable).
+    steps:
+      - Sign in with valid credentials (or complete TV-provider auth flow / activation code on CTV).
+      - Access an entitled/gated piece of content.
+      - Sign out and confirm gated content is locked again.
+    expected: >
+      Sign-in succeeds, entitlement unlocks gated content, session persists per
+      spec, and sign-out fully clears the entitled state.
+    automation: automated-candidate
+
+  - id: TC-P0-008
+    title: App launch / site load — cold start with no crash
+    priority: P0
+    area: app-stability
+    platforms: [web, ios, android, ctv]
+    tags: [stability, smoke, launch]
+    preconditions: App installed fresh (mobile/CTV) or cache-cleared browser (web).
+    steps:
+      - Cold launch the app / load the site.
+      - Wait for the home surface to fully render.
+      - Repeat 3 times.
+    expected: >
+      No crashes, ANRs, or fatal JS errors; home surface renders fully with
+      content (not skeletons) within acceptable load time on each attempt.
+    automation: automated-candidate

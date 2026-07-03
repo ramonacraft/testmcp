@@ -1,0 +1,246 @@
+# TestMCP Risk Mappings
+# Maps code-change signals (file path globs + keywords found in paths, PR title,
+# and PR body) to functional areas in the test case library. This is the heart
+# of the prediction layer: edit these mappings to teach TestMCP your codebase.
+#
+# criticality drives the risk weighting: P0 = 4, P1 = 3, P2 = 2, P3 = 1.
+
+areas:
+  video-playback:
+    description: VOD player, playback engine, ABR, DRM, player UI/controls
+    criticality: P0
+    file_patterns:
+      - "**/player/**"
+      - "**/*player*"
+      - "**/video/**"
+      - "**/*playback*"
+      - "**/*hls*"
+      - "**/*dash*"
+      - "**/*drm*"
+      - "**/*exoplayer*"
+      - "**/*avplayer*"
+    keywords: [player, playback, video, hls, dash, drm, bitrate, buffer, codec, vod]
+
+  live-streaming:
+    description: Live channels, live edge, SCTE markers, live event surfaces
+    criticality: P0
+    file_patterns:
+      - "**/live/**"
+      - "**/*live*"
+      - "**/*stream*"
+      - "**/*scte*"
+      - "**/*epg*"
+    keywords: [live, stream, linear, scte, epg, channel, broadcast]
+
+  analytics:
+    description: Adobe Launch/AEP, heartbeat, comScore, Nielsen, tag management, tracking
+    criticality: P0
+    file_patterns:
+      - "**/analytics/**"
+      - "**/*analytics*"
+      - "**/*adobe*"
+      - "**/*tracking*"
+      - "**/*telemetry*"
+      - "**/*heartbeat*"
+      - "**/*comscore*"
+      - "**/*nielsen*"
+      - "**/*segment*"
+      - "**/*gtm*"
+    keywords: [analytics, adobe, launch, heartbeat, tracking, beacon, comscore, nielsen, pageview, telemetry, tag]
+
+  terms-compliance:
+    description: Terms of use, privacy policy, consent management (CMP), GDPR/CCPA
+    criticality: P0
+    file_patterns:
+      - "**/*terms*"
+      - "**/*privacy*"
+      - "**/*consent*"
+      - "**/*gdpr*"
+      - "**/*ccpa*"
+      - "**/*onetrust*"
+      - "**/legal/**"
+    keywords: [terms, privacy, consent, gdpr, ccpa, compliance, legal, cmp, onetrust]
+
+  auth:
+    description: Sign in/up, sessions, entitlement, MVPD/TV-provider auth, tokens
+    criticality: P0
+    file_patterns:
+      - "**/auth/**"
+      - "**/*auth*"
+      - "**/*login*"
+      - "**/*signin*"
+      - "**/*signup*"
+      - "**/*session*"
+      - "**/*entitle*"
+      - "**/*mvpd*"
+      - "**/*token*"
+      - "**/*oauth*"
+    keywords: [auth, login, signin, signup, session, entitlement, mvpd, oauth, token, sso, password]
+
+  navigation-routing:
+    description: Routing, navigation stacks, deep links, URL handling
+    criticality: P0
+    file_patterns:
+      - "**/navigation/**"
+      - "**/routes/**"
+      - "**/*rout*"
+      - "**/*navigat*"
+      - "**/*deeplink*"
+      - "**/*deep-link*"
+      - "**/*universal-link*"
+    keywords: [route, routing, navigation, deeplink, deep link, universal link, redirect]
+
+  app-stability:
+    description: App lifecycle, startup, crash handling, core infrastructure
+    criticality: P0
+    file_patterns:
+      - "**/App.*"
+      - "**/main.*"
+      - "**/index.*"
+      - "**/AppDelegate.*"
+      - "**/MainActivity.*"
+      - "**/Application.*"
+      - "**/*bootstrap*"
+      - "**/*startup*"
+    keywords: [launch, startup, lifecycle, crash, bootstrap, cold start]
+
+  ads:
+    description: Ad serving, pre/mid-roll, ad SDKs (IMA/FreeWheel), ad beacons
+    criticality: P1
+    file_patterns:
+      - "**/ads/**"
+      - "**/*advert*"
+      - "**/*ad-*"
+      - "**/*freewheel*"
+      - "**/*ima*"
+      - "**/*vast*"
+      - "**/*vmap*"
+    keywords: [ads, advert, preroll, midroll, freewheel, ima, vast, vmap, ad break, monetization]
+
+  search-discovery:
+    description: Search, autocomplete, recommendations, browse/discovery rails
+    criticality: P1
+    file_patterns:
+      - "**/search/**"
+      - "**/*search*"
+      - "**/*discover*"
+      - "**/*recommend*"
+      - "**/*autocomplete*"
+    keywords: [search, discovery, recommendation, autocomplete, browse, rail, carousel]
+
+  push-notifications:
+    description: Push registration, providers (APNs/FCM/Airship/Braze), deep links from push
+    criticality: P1
+    file_patterns:
+      - "**/*push*"
+      - "**/*notification*"
+      - "**/*apns*"
+      - "**/*fcm*"
+      - "**/*airship*"
+      - "**/*braze*"
+    keywords: [push, notification, apns, fcm, airship, braze, opt-in]
+
+  accessibility:
+    description: Captions, screen readers, focus management, a11y compliance
+    criticality: P1
+    file_patterns:
+      - "**/*caption*"
+      - "**/*subtitle*"
+      - "**/*a11y*"
+      - "**/*accessib*"
+    keywords: [caption, subtitle, accessibility, a11y, voiceover, talkback, wcag]
+
+  settings:
+    description: User settings and preferences
+    criticality: P2
+    file_patterns:
+      - "**/settings/**"
+      - "**/*settings*"
+      - "**/*preference*"
+    keywords: [settings, preferences, toggle]
+
+  content-metadata:
+    description: Content feeds, metadata display, detail pages, artwork
+    criticality: P2
+    file_patterns:
+      - "**/*metadata*"
+      - "**/*content*"
+      - "**/detail/**"
+      - "**/*feed*"
+    keywords: [metadata, feed, detail page, artwork, rating, description]
+
+  ui-layout:
+    description: Layout, styling, components, responsive design
+    criticality: P2
+    file_patterns:
+      - "**/components/**"
+      - "**/*.css"
+      - "**/*.scss"
+      - "**/*.less"
+      - "**/styles/**"
+      - "**/*layout*"
+      - "**/*theme*"
+    keywords: [layout, style, css, responsive, breakpoint, component, theme]
+
+  sharing:
+    description: Social sharing, OG tags, share sheets
+    criticality: P2
+    file_patterns:
+      - "**/*share*"
+      - "**/*social*"
+      - "**/*og-*"
+    keywords: [share, social, og tag, open graph]
+
+  engagement:
+    description: In-app messaging, banners, campaigns
+    criticality: P2
+    file_patterns:
+      - "**/*banner*"
+      - "**/*campaign*"
+      - "**/*message*"
+    keywords: [banner, campaign, in-app message]
+
+  forms:
+    description: Form inputs and validation
+    criticality: P3
+    file_patterns:
+      - "**/forms/**"
+      - "**/*form*"
+      - "**/*validat*"
+    keywords: [form, validation, input]
+
+# Cross-cutting signals that raise overall PR risk regardless of area.
+global_risk_signals:
+  dependency_files:
+    patterns:
+      - "package.json"
+      - "package-lock.json"
+      - "yarn.lock"
+      - "pnpm-lock.yaml"
+      - "Podfile"
+      - "Podfile.lock"
+      - "*.gradle"
+      - "*.gradle.kts"
+      - "gradle.properties"
+      - "Gemfile*"
+      - "requirements*.txt"
+      - "go.mod"
+    note: Dependency changes can have wide, non-obvious blast radius — expand regression scope.
+  ci_config_files:
+    patterns:
+      - ".github/workflows/**"
+      - "fastlane/**"
+      - "*.yml"
+      - "*.yaml"
+      - "Dockerfile*"
+    note: Build/CI changes can alter what actually ships — verify build artifacts and environments.
+  test_file_patterns:
+    patterns:
+      - "**/*.test.*"
+      - "**/*.spec.*"
+      - "**/__tests__/**"
+      - "**/test/**"
+      - "**/tests/**"
+      - "**/*Test.*"
+      - "**/*Tests.*"
+    note: Used to detect whether the PR includes test coverage for its changes.

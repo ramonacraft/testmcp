@@ -1,0 +1,125 @@
+# TestMCP Test Case Library — P1 (High)
+# Major functionality. Failures here severely degrade the experience but may
+# have workarounds. Expected to be verified for every release.
+
+test_cases:
+  - id: TC-P1-001
+    title: Ad playback — pre-roll and mid-roll render and are skippable per spec
+    priority: P1
+    area: ads
+    platforms: [web, ios, android, ctv]
+    tags: [ads, playback, monetization]
+    preconditions: Ad-supported content available; ad tags active in the test environment.
+    steps:
+      - Start playback of ad-supported content.
+      - Verify pre-roll plays, counts down, and content resumes after.
+      - Seek past a mid-roll cue point and verify mid-roll behavior per spec.
+      - Verify ad click-through opens correctly and returns to content.
+    expected: >
+      Ads render without freezing the player, content resumes at the right
+      position, ad counters are accurate, and ad beacons fire.
+    automation: manual
+
+  - id: TC-P1-002
+    title: Search returns relevant results and handles empty/error states
+    priority: P1
+    area: search-discovery
+    platforms: [web, ios, android, ctv]
+    tags: [search, discovery]
+    preconditions: Search index populated in the environment.
+    steps:
+      - Search for a known title; verify relevant results.
+      - Search a partial term; verify autocomplete/suggestions (if supported).
+      - Search gibberish; verify a friendly empty state.
+    expected: Relevant results, functional navigation into results, graceful empty state, no crashes.
+    automation: automated-candidate
+
+  - id: TC-P1-003
+    title: Video quality adaptation and fullscreen behavior
+    priority: P1
+    area: video-playback
+    platforms: [web, ios, android]
+    tags: [playback, abr, fullscreen]
+    preconditions: Content playing; network throttling tool available.
+    steps:
+      - Start playback; throttle bandwidth and observe adaptive bitrate downshift.
+      - Restore bandwidth and observe recovery.
+      - Enter and exit fullscreen; rotate device (mobile).
+    expected: >
+      ABR adapts without fatal stalls, fullscreen transitions preserve playback
+      position and controls, rotation does not crash or reset the player.
+    automation: manual
+
+  - id: TC-P1-004
+    title: Account management — sign-up, password reset, profile update
+    priority: P1
+    area: auth
+    platforms: [web, ios, android]
+    tags: [auth, account]
+    preconditions: Email inbox access for test account.
+    steps:
+      - Create a new account and verify confirmation flow.
+      - Trigger password reset and complete it from the email link.
+      - Update a profile field and verify persistence.
+    expected: All account flows complete without errors; emails arrive; changes persist across sessions.
+    automation: automated-candidate
+
+  - id: TC-P1-005
+    title: Third-party analytics and tag integrity beyond Adobe (e.g., comScore, Nielsen, Chartbeat)
+    priority: P1
+    area: analytics
+    platforms: [web, ios, android, ctv]
+    tags: [analytics, third-party, comscore, nielsen]
+    preconditions: Network inspection tooling attached.
+    steps:
+      - Load key pages / screens and verify each contracted third-party beacon fires.
+      - Verify no beacon fires for vendors that are supposed to be removed/consent-gated.
+      - Toggle consent (where applicable) and re-verify gating.
+    expected: >
+      All contracted vendor beacons fire with correct IDs; consent settings
+      correctly suppress/enable vendors; no orphaned/legacy tags fire.
+    automation: manual
+
+  - id: TC-P1-006
+    title: Push notification opt-in and deep link handling
+    priority: P1
+    area: push-notifications
+    platforms: [ios, android]
+    tags: [push, deep-link, engagement]
+    preconditions: Push test tooling (e.g., provider console) available.
+    steps:
+      - Fresh install; verify push permission prompt timing per spec.
+      - Opt in and send a test push.
+      - Tap the push and verify deep link lands on the correct screen.
+    expected: Prompt appears per spec, push arrives, deep link resolves to correct content, no cold-start crash from push open.
+    automation: manual
+
+  - id: TC-P1-007
+    title: Video player error handling — expired/invalid stream and network loss
+    priority: P1
+    area: video-playback
+    platforms: [web, ios, android, ctv]
+    tags: [playback, error-handling, resilience]
+    preconditions: Ability to simulate network loss / bad stream URL.
+    steps:
+      - Start playback then kill network; observe player behavior and messaging.
+      - Restore network; verify recovery or clear retry affordance.
+      - Attempt playback of an invalid/expired asset.
+    expected: >
+      User sees friendly, actionable error messaging (not raw error codes),
+      player recovers or offers retry, app does not crash.
+    automation: manual
+
+  - id: TC-P1-008
+    title: Closed captions / subtitles toggle and render correctly
+    priority: P1
+    area: accessibility
+    platforms: [web, ios, android, ctv]
+    tags: [accessibility, captions, compliance]
+    preconditions: Captioned content available.
+    steps:
+      - Start playback and enable captions.
+      - Verify rendering, timing, and styling options (where supported).
+      - Disable captions; verify they stop rendering; verify setting persists.
+    expected: Captions toggle reliably, are legible and in sync, and the preference persists across sessions.
+    automation: automated-candidate

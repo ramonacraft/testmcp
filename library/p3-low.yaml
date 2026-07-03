@@ -1,0 +1,54 @@
+# TestMCP Test Case Library — P3 (Low)
+# Cosmetic / edge-case coverage. Verified when the risk analysis flags the area
+# or when time permits.
+
+test_cases:
+  - id: TC-P3-001
+    title: UI polish — animations, transitions, and skeleton states
+    priority: P3
+    area: ui-layout
+    platforms: [web, ios, android, ctv]
+    tags: [polish, animation]
+    preconditions: None.
+    steps:
+      - Navigate across surfaces watching for janky transitions, flashing skeletons, misaligned elements.
+    expected: Transitions are smooth; loading states resolve cleanly.
+    automation: manual
+
+  - id: TC-P3-002
+    title: Copy/localization spot check
+    priority: P3
+    area: content-metadata
+    platforms: [web, ios, android]
+    tags: [copy, localization]
+    preconditions: Locale switching available (if supported).
+    steps:
+      - Spot-check headings, buttons, and error copy for typos, truncation, and untranslated strings.
+    expected: No obvious copy defects or truncated strings on primary surfaces.
+    automation: manual
+
+  - id: TC-P3-003
+    title: Edge-case input handling in forms (email, search, promo codes)
+    priority: P3
+    area: forms
+    platforms: [web, ios, android]
+    tags: [forms, validation, edge-case]
+    preconditions: Forms accessible.
+    steps:
+      - Enter boundary/invalid inputs (very long strings, emoji, script tags, whitespace).
+      - Verify validation messaging and that no unhandled errors surface.
+    expected: Inputs validated gracefully; no XSS rendering, crashes, or raw server errors.
+    automation: automated-candidate
+
+  - id: TC-P3-004
+    title: App behavior under low storage / low memory (mobile)
+    priority: P3
+    area: app-stability
+    platforms: [ios, android]
+    tags: [stability, resource, edge-case]
+    preconditions: Device or simulator with constrained resources.
+    steps:
+      - Use the app normally under constrained memory/storage.
+      - Background with video playing; return after several other apps used.
+    expected: App degrades gracefully — no data corruption, recoverable state, no crash loop.
+    automation: manual
