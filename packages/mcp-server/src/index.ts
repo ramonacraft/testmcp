@@ -134,7 +134,7 @@ const GenerateTestPlanSchema = z
     response_format: z
       .nativeEnum(ResponseFormat)
       .default(ResponseFormat.MARKDOWN)
-      .describe("'markdown' for human-readable plan, 'json' for structured export (TestRail/Xray/Jira import, pipelines)"),
+      .describe("'markdown' for human-readable plan, 'json' for structured export (Jira workflows, CI pipelines)"),
   })
   .strict();
 

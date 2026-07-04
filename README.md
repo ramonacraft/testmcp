@@ -43,7 +43,7 @@ Fine-grained PAT with **Pull requests: read** and **Contents: read**. Public rep
 
 Three views:
 
-- **Analyze PR** — enter `owner / repo / #`, optionally filter platforms, and get the live risk dial (0–100), contributing factors, impacted area chips, and the full P0–P3 plan with expandable case steps. Copy the plan as Markdown for a PR comment, or download `.md` / `.json` (the JSON matches the MCP tool output — importable into TestRail/Xray/Jira pipelines later).
+- **Analyze PR** — enter `owner / repo / #`, optionally filter platforms, and get the live risk dial (0–100), contributing factors, impacted area chips, and the full P0–P3 plan with expandable case steps. Copy the plan as Markdown for a PR comment, or download `.md` / `.json` (the JSON matches the MCP tool output — usable in Jira workflows and CI pipelines). Test case management is built in via the YAML library, so no third-party TCM tool is required.
 - **Test Library** — search/filter every case by priority, platform, and area; add new cases through the form (persisted to `library/custom.yaml`).
 - **Risk Areas** — the mapping table that drives predictions. Tune `library/mappings.yaml` to your codebase and TestMCP gets sharper.
 
@@ -90,7 +90,7 @@ Tools: `testmcp_analyze_pr`, `testmcp_generate_test_plan`, `testmcp_list_test_ca
 
 - GitHub Action that posts the plan as a PR comment automatically
 - Historical bug-density weighting per file/area
-- TestRail / Xray / Jira export adapters
+- Jira integration: create/link bugs and test tasks from a plan (TestMCP's YAML library IS the test case management layer — no third-party TCM by design)
 - Execution tracking: pass/fail per case, release-readiness rollup
 
 ---
