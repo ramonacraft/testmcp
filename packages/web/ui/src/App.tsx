@@ -476,7 +476,12 @@ export default function App() {
         {tab === "library" && <LibraryView areas={areas} />}
         {tab === "areas" && <AreasView areas={areas} />}
       </main>
-      <footer>TestMCP · test case management as a prediction layer · complements your existing repo agents</footer>
+      <footer>
+        TestMCP · test case management as a prediction layer · built by{" "}
+        <a href="https://github.com/ramonacraft" target="_blank" rel="noreferrer">
+          Ramona Bonitatis
+        </a>
+      </footer>
     </div>
   );
 }
