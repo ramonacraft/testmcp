@@ -1,0 +1,19 @@
+{
+  "name": "testmcp",
+  "version": "0.2.0",
+  "private": true,
+  "description": "TestMCP — AI QA prediction layer for GitHub PRs. Monorepo: shared core, MCP server, web dashboard.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @testmcp/core && npm run build -w @testmcp/mcp-server && npm run build -w @testmcp/web",
+    "web": "npm run start -w @testmcp/web",
+    "mcp": "node packages/mcp-server/dist/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "Ramona Bonitatis",
+  "license": "MIT"
+}

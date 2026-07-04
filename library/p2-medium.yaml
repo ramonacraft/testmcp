@@ -1,0 +1,85 @@
+# TestMCP Test Case Library — P2 (Medium)
+# Standard functionality; failures are annoying but not release-blocking on their own.
+
+test_cases:
+  - id: TC-P2-001
+    title: Continue watching / resume playback across sessions
+    priority: P2
+    area: video-playback
+    platforms: [web, ios, android, ctv]
+    tags: [playback, resume, personalization]
+    preconditions: Signed-in user with partially watched content.
+    steps:
+      - Watch part of an asset; exit.
+      - Relaunch and verify the asset appears in Continue Watching with correct progress.
+      - Resume and verify position accuracy.
+    expected: Progress syncs (including cross-device where supported) and resume lands within tolerance of exit point.
+    automation: automated-candidate
+
+  - id: TC-P2-002
+    title: Content metadata display — titles, descriptions, artwork, ratings
+    priority: P2
+    area: content-metadata
+    platforms: [web, ios, android, ctv]
+    tags: [metadata, content]
+    preconditions: Environment fed by the production-like content pipeline.
+    steps:
+      - Spot-check detail pages across content types (episode, clip, movie, live event).
+      - Verify artwork loads, titles/descriptions are correct, ratings/advisories display.
+    expected: No missing/placeholder metadata on primary surfaces; images load with correct aspect ratios.
+    automation: manual
+
+  - id: TC-P2-003
+    title: Settings — video quality, autoplay, and notification preferences persist
+    priority: P2
+    area: settings
+    platforms: [web, ios, android]
+    tags: [settings, preferences]
+    preconditions: Signed-in user.
+    steps:
+      - Change each available setting.
+      - Kill and relaunch; verify persistence.
+      - Verify behavior actually changes (e.g., autoplay off stops autoplay).
+    expected: Settings persist and take functional effect.
+    automation: automated-candidate
+
+  - id: TC-P2-004
+    title: Web responsive layout and mobile breakpoints
+    priority: P2
+    area: ui-layout
+    platforms: [web]
+    tags: [responsive, layout, cross-browser]
+    preconditions: Access to key pages.
+    steps:
+      - Resize through mobile/tablet/desktop breakpoints on home, detail, and player pages.
+      - Verify nav collapses to hamburger correctly, no overlapping elements, player scales.
+    expected: No broken layouts, clipped text, or unusable controls at any standard breakpoint.
+    automation: automated-candidate
+
+  - id: TC-P2-005
+    title: Social sharing links generate correct URLs and previews
+    priority: P2
+    area: sharing
+    platforms: [web, ios, android]
+    tags: [sharing, social]
+    preconditions: Shareable content available.
+    steps:
+      - Share an asset via the share affordance.
+      - Verify the generated URL resolves to the correct content.
+      - Verify OG/meta tags produce correct link previews.
+    expected: Share URLs are correct, deep-link back into content, and previews render title/image.
+    automation: manual
+
+  - id: TC-P2-006
+    title: In-app messaging / banners render and dismiss correctly
+    priority: P2
+    area: engagement
+    platforms: [web, ios, android]
+    tags: [messaging, banners]
+    preconditions: Test campaign configured.
+    steps:
+      - Trigger the banner/message condition.
+      - Verify display, CTA behavior, and dismissal.
+      - Verify it respects frequency capping.
+    expected: Messages display per targeting rules, CTAs work, dismissal persists per spec.
+    automation: manual
