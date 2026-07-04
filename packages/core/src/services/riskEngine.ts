@@ -27,6 +27,17 @@ function matchesAny(file: string, patterns: string[]): boolean {
   );
 }
 
+/**
+ * Word-boundary keyword match. A bare substring check ("ads" in "loads",
+ * "ima" in "reanimated") produces false-positive area hits, which inflate
+ * risk scores and erode trust in the report. Keywords only count when they
+ * appear as whole words/phrases.
+ */
+function proseContainsKeyword(prose: string, keyword: string): boolean {
+  const escaped = keyword.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, "i").test(prose);
+}
+
 export function classifyAreas(pr: PrInfo): AreaHit[] {
   const mappings = loadMappings();
   const prose = `${pr.title}\n${pr.body}`.toLowerCase();
@@ -38,7 +49,7 @@ export function classifyAreas(pr: PrInfo): AreaHit[] {
       .filter((f) => matchesAny(f, area.file_patterns));
 
     const matchedKeywords = area.keywords.filter((kw) =>
-      prose.includes(kw.toLowerCase())
+      proseContainsKeyword(prose, kw)
     );
 
     if (matchedFiles.length === 0 && matchedKeywords.length === 0) continue;

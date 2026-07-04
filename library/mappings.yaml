@@ -15,7 +15,10 @@ areas:
       - "**/video/**"
       - "**/*playback*"
       - "**/*hls*"
-      - "**/*dash*"
+      # 'dash' needs segment boundaries — bare "**/*dash*" matches "dashboard".
+      - "**/dash/**"
+      - "**/dash[-._]*"
+      - "**/*[-._]dash[-._]*"
       - "**/*drm*"
       - "**/*exoplayer*"
       - "**/*avplayer*"
@@ -26,8 +29,12 @@ areas:
     criticality: P0
     file_patterns:
       - "**/live/**"
-      - "**/*live*"
-      - "**/*stream*"
+      # 'live' and 'stream' need segment boundaries — bare "**/*live*" matches
+      # "delivery", bare "**/*stream*" matches "downstream"/"upstream".
+      - "**/live[-._]*"
+      - "**/*[-._]live[-._]*"
+      - "**/stream*"
+      - "**/*[-._]stream*"
       - "**/*scte*"
       - "**/*epg*"
     keywords: [live, stream, linear, scte, epg, channel, broadcast]
@@ -44,9 +51,13 @@ areas:
       - "**/*heartbeat*"
       - "**/*comscore*"
       - "**/*nielsen*"
-      - "**/*segment*"
+      # 'segment' as a bare glob is ambiguous in a streaming app (video segments,
+      # segmented controls) — only match a dedicated segment/ directory.
+      - "**/segment/**"
       - "**/*gtm*"
-    keywords: [analytics, adobe, launch, heartbeat, tracking, beacon, comscore, nielsen, pageview, telemetry, tag]
+    # 'launch' and 'tag' alone are too common in PR prose ("launch the feature",
+    # git tags) — qualified phrases only.
+    keywords: [analytics, adobe, adobe launch, heartbeat, tracking, beacon, comscore, nielsen, pageview, telemetry, tag manager]
 
   terms-compliance:
     description: Terms of use, privacy policy, consent management (CMP), GDPR/CCPA
@@ -66,6 +77,8 @@ areas:
     criticality: P0
     file_patterns:
       - "**/auth/**"
+      # Note: "**/*auth*" intentionally matches "authorization"/"authenticate",
+      # but also matches "author*" files — acceptable for P0 caution, revisit if noisy.
       - "**/*auth*"
       - "**/*login*"
       - "**/*signin*"
@@ -83,7 +96,13 @@ areas:
     file_patterns:
       - "**/navigation/**"
       - "**/routes/**"
-      - "**/*rout*"
+      # "**/*rout*" matched "routine" — spell out the real variants,
+      # including files nested inside route/router directories.
+      - "**/*route*"
+      - "**/*router*"
+      - "**/*routing*"
+      - "**/*route*/**"
+      - "**/*routing*/**"
       - "**/*navigat*"
       - "**/*deeplink*"
       - "**/*deep-link*"
@@ -95,8 +114,12 @@ areas:
     criticality: P0
     file_patterns:
       - "**/App.*"
-      - "**/main.*"
-      - "**/index.*"
+      # "**/index.*" and "**/main.*" matched every index/main file in any repo —
+      # scope to src-level entry points only.
+      - "src/main.*"
+      - "src/index.*"
+      - "app/main.*"
+      - "app/index.*"
       - "**/AppDelegate.*"
       - "**/MainActivity.*"
       - "**/Application.*"
@@ -110,9 +133,14 @@ areas:
     file_patterns:
       - "**/ads/**"
       - "**/*advert*"
-      - "**/*ad-*"
+      # 'ad' and 'ima' need segment boundaries — bare "**/*ad-*" matched "download-*",
+      # and "**/*ima*" matched "reanimated" (real false positive, facebook/react#34000).
+      - "**/ad[-._]*"
+      - "**/*[-._]ad[-._]*"
       - "**/*freewheel*"
-      - "**/*ima*"
+      - "**/ima/**"
+      - "**/ima[-._]*"
+      - "**/*[-._]ima[-._]*"
       - "**/*vast*"
       - "**/*vmap*"
     keywords: [ads, advert, preroll, midroll, freewheel, ima, vast, vmap, ad break, monetization]
@@ -228,11 +256,17 @@ global_risk_signals:
     note: Dependency changes can have wide, non-obvious blast radius — expand regression scope.
   ci_config_files:
     patterns:
+      # Blanket "*.yml"/"*.yaml" counted every YAML file in the repo (fixtures,
+      # configs, even TestMCP's own library) as CI config — match real CI paths only.
       - ".github/workflows/**"
+      - ".circleci/**"
+      - ".gitlab-ci.yml"
+      - "azure-pipelines*.yml"
+      - "bitrise.yml"
       - "fastlane/**"
-      - "*.yml"
-      - "*.yaml"
+      - "Jenkinsfile*"
       - "Dockerfile*"
+      - "docker-compose*.yml"
     note: Build/CI changes can alter what actually ships — verify build artifacts and environments.
   test_file_patterns:
     patterns:
