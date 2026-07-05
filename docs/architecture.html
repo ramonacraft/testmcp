@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TestMCP Architecture — AI QA Prediction Layer for GitHub Pull Requests</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --panel: #ffffff;
+    --ink: #1b2233;
+    --muted: #6b7280;
+    --line: #d9dee8;
+    --blue: #2b6cff;
+    --blue-soft: #eaf0ff;
+    --green: #17936b;
+    --green-soft: #e7f6ef;
+    --amber: #d98a00;
+    --red: #d93a3a;
+    --p0: #d93a3a; --p1: #d98a00; --p2: #b8860b; --p3: #17936b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .sheet { max-width: 1240px; margin: 0 auto; padding: 28px 32px 40px; }
+  .topbar { height: 5px; background: var(--blue); border-radius: 4px; margin-bottom: 20px; }
+  header.hd { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .logo { font-size: 1.6rem; }
+  .brand .name { font-weight: 800; font-size: 1.5rem; letter-spacing: 0.5px; }
+  .pill { background: var(--blue-soft); color: var(--blue); font-weight: 700; font-size: 0.7rem;
+          letter-spacing: 1px; padding: 4px 10px; border-radius: 6px; border: 1px solid #cfdcff; }
+  .divider { width: 1px; height: 26px; background: var(--line); }
+  .tag { color: var(--muted); font-size: 1.02rem; }
+  .meta { color: var(--muted); font-size: 0.82rem; text-align: right; }
+  .banner { display: flex; justify-content: space-between; align-items: center; gap: 20px;
+            background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--blue);
+            border-radius: 10px; padding: 14px 20px; margin: 18px 0 26px; flex-wrap: wrap; }
+  .banner .lead small { color: var(--muted); font-weight: 500; }
+  .banner .lead b { display: block; font-size: 1.15rem; margin-top: 2px; }
+  .banner .whisper { color: var(--muted); font-style: italic; font-size: 1.02rem; }
+
+  .flow { display: grid; grid-template-columns: 200px 40px 1fr 40px 220px; align-items: stretch; gap: 0; }
+  .col-label { grid-column: 1 / -1; color: var(--muted); font-size: 0.72rem; letter-spacing: 1.5px;
+               font-weight: 700; margin: 6px 2px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .card h4 { margin: 0 0 2px; font-size: 0.68rem; letter-spacing: 1px; color: var(--muted); font-weight: 700; }
+  .card .big { font-weight: 800; font-size: 1.05rem; margin: 2px 0 8px; }
+  .card ul { margin: 8px 0 0; padding-left: 16px; color: var(--muted); font-size: 0.82rem; }
+  .card ul li { margin: 3px 0; }
+
+  .arrow { display: flex; align-items: center; justify-content: center; color: var(--blue); font-size: 1.6rem; font-weight: 700; }
+
+  .engine { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 14px; }
+  .engine-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .engine-hd .t { font-size: 0.68rem; letter-spacing: 1px; color: var(--blue); font-weight: 800; }
+  .badge { background: var(--blue-soft); color: var(--blue); border: 1px solid #cfdcff; border-radius: 6px;
+           font-size: 0.72rem; font-weight: 700; padding: 3px 9px; }
+  .stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stage { border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: #fbfcfe; }
+  .stage h5 { margin: 0 0 2px; font-size: 0.66rem; letter-spacing: 1px; color: var(--muted); font-weight: 700; }
+  .stage .st-title { font-weight: 800; font-size: 0.98rem; margin-bottom: 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { font-size: 0.72rem; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); background: #fff; }
+  .chip.v { color: #2b6cff; border-color: #cfdcff; background: #eef3ff; }
+  .chip.a { color: #17936b; border-color: #bfe6d5; background: #e7f6ef; }
+  .chip.n { color: #b1560f; border-color: #f2d2ba; background: #fdeee2; }
+  .count { font-size: 2rem; font-weight: 800; line-height: 1; margin-top: 8px; }
+  .count small { display: block; font-size: 0.72rem; font-weight: 600; color: var(--muted); letter-spacing: 0.5px; }
+  .dial { text-align: center; }
+  .dial .val { font-size: 2rem; font-weight: 800; color: var(--red); margin-top: 4px; }
+  .dial .lvl { font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; color: var(--red); }
+  .dial .note { font-size: 0.72rem; color: var(--muted); font-style: italic; margin-top: 4px; }
+  .plan-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; font-size: 0.85rem; }
+  .prio { font-size: 0.66rem; font-weight: 800; color: #fff; border-radius: 5px; padding: 2px 6px; min-width: 26px; text-align: center; }
+  .p0 { background: var(--p0); } .p1 { background: var(--p1); } .p2 { background: var(--p2); } .p3 { background: var(--p3); }
+
+  .tools { list-style: none; margin: 8px 0 0; padding: 0; }
+  .tools li { padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 0.82rem; }
+  .tools li:last-child { border-bottom: none; }
+  .tools code { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 0.8rem; color: var(--blue); font-weight: 600; }
+  .tools .hint { display: block; color: var(--muted); font-size: 0.72rem; }
+  .toolcount { font-size: 2.2rem; font-weight: 800; color: var(--blue); }
+  .toolcount small { font-size: 0.8rem; color: var(--muted); font-weight: 600; margin-left: 4px; }
+
+  .client { margin-bottom: 12px; }
+  .client.local { border-color: #bfe6d5; box-shadow: 0 0 0 2px #e7f6ef inset; }
+  .airgap { display: inline-block; background: var(--green-soft); color: var(--green); border: 1px solid #bfe6d5;
+            border-radius: 6px; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; margin-right: 6px; }
+  .foundation { margin-top: 18px; background: var(--blue-soft); border: 1px solid #cfdcff; border-radius: 12px;
+                padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .foundation .big { font-weight: 800; font-size: 1.1rem; }
+  .foundation .sub { color: var(--muted); font-size: 0.85rem; }
+  .git { background: #fff; color: var(--blue); border: 1px solid #cfdcff; border-radius: 8px; font-weight: 700;
+         font-size: 0.8rem; padding: 7px 14px; }
+  .bugnote { margin-top: 14px; background: var(--green-soft); border: 1px solid #bfe6d5; border-radius: 10px;
+             padding: 12px 16px; color: #0f6a4c; font-style: italic; font-size: 0.9rem; }
+  .foot { text-align: center; margin-top: 26px; }
+  .foot .tagline { font-style: italic; font-weight: 600; font-size: 1.05rem; }
+  .foot .principles { color: var(--muted); margin-top: 10px; font-size: 0.9rem; }
+  .foot .built { color: var(--muted); margin-top: 8px; font-size: 0.82rem; }
+  @media (max-width: 900px) {
+    .flow { grid-template-columns: 1fr; }
+    .arrow { transform: rotate(90deg); padding: 6px 0; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="topbar"></div>
+
+  <header class="hd">
+    <div class="brand">
+      <span class="logo">🤖</span>
+      <span class="name">TESTMCP</span>
+      <span class="pill">ARCHITECTURE</span>
+      <span class="divider"></span>
+      <span class="tag">AI QA Prediction Layer for GitHub Pull Requests</span>
+    </div>
+    <div class="meta">6 tools · 17 functional areas · updated 2026-07-04</div>
+  </header>
+
+  <div class="banner">
+    <div class="lead">
+      <small>Acceptance criteria cover the feature.</small>
+      <b>TestMCP covers the blast radius.</b>
+    </div>
+    <div class="whisper">Catch the right bugs before they ship.</div>
+  </div>
+
+  <div class="flow">
+    <div class="col-label">INPUT&nbsp;&nbsp;·&nbsp;&nbsp;CORE ENGINE&nbsp;&nbsp;·&nbsp;&nbsp;MCP SERVER&nbsp;&nbsp;·&nbsp;&nbsp;CLIENTS</div>
+
+    <!-- INPUT -->
+    <div class="card">
+      <h4>GITHUB PULL REQUEST</h4>
+      <div class="big">metadata + changed files</div>
+      <div style="color:var(--muted);font-size:0.8rem;">via GitHub API (read-only)</div>
+      <ul>
+        <li>diff analysis</li>
+        <li>file glob matching</li>
+        <li>dependency graph scan</li>
+        <li>CI config changes</li>
+        <li>test coverage delta</li>
+      </ul>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <!-- CORE ENGINE -->
+    <div class="engine">
+      <div class="engine-hd">
+        <span class="t">CORE ENGINE</span>
+        <span class="badge">deterministic ✓</span>
+      </div>
+      <div class="stages">
+        <div class="stage">
+          <h5>CLASSIFY</h5>
+          <div class="st-title">Functional areas</div>
+          <div class="chips">
+            <span class="chip v">video&nbsp;play</span>
+            <span class="chip v">streaming</span>
+            <span class="chip a">auth</span>
+            <span class="chip n">analytics</span>
+            <span class="chip a">live&nbsp;events</span>
+            <span class="chip n">ads</span>
+          </div>
+          <div class="count">17<small>areas mapped to your codebase</small></div>
+        </div>
+        <div class="stage">
+          <h5>SCORE</h5>
+          <div class="st-title">Risk 0–100</div>
+          <div class="dial">
+            <div class="val">72</div>
+            <div class="lvl">HIGH RISK</div>
+            <div class="note">Same PR, same score, every time.</div>
+          </div>
+        </div>
+        <div class="stage">
+          <h5>PLAN</h5>
+          <div class="st-title">Prioritized plan</div>
+          <div class="plan-row"><span class="prio p0">P0</span> auth flow</div>
+          <div class="plan-row"><span class="prio p1">P1</span> video play</div>
+          <div class="plan-row"><span class="prio p2">P2</span> analytics</div>
+          <div class="plan-row"><span class="prio p3">P3</span> ads</div>
+          <div style="color:var(--muted);font-size:0.72rem;margin-top:6px;">pulled from library ↓</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <!-- MCP SERVER -->
+    <div class="card">
+      <h4>MCP SERVER · Model Context Protocol</h4>
+      <div class="toolcount">6<small>tools</small></div>
+      <ul class="tools">
+        <li><code>testmcp_analyze_pr</code><span class="hint">classify + score a PR</span></li>
+        <li><code>testmcp_generate_test_plan</code><span class="hint">prioritized P0–P3 plan</span></li>
+        <li><code>testmcp_list_areas</code><span class="hint">the 17 functional areas</span></li>
+        <li><code>testmcp_list_test_cases</code><span class="hint">browse the library</span></li>
+        <li><code>testmcp_search_test_cases</code><span class="hint">find cases by area / platform</span></li>
+        <li><code>testmcp_add_test_case</code><span class="hint">extend the library at runtime</span></li>
+      </ul>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <!-- CLIENTS -->
+    <div>
+      <div class="card client">
+        <h4>CLIENT · CLOUD AI</h4>
+        <div class="big">Claude Desktop</div>
+        <div style="color:var(--muted);font-size:0.8rem;">Anthropic Claude — cloud inference<br>full context window · tool use</div>
+      </div>
+      <div class="card client local">
+        <h4>CLIENT · LOCAL</h4>
+        <div class="big">LM Studio + Qwen 7B</div>
+        <div style="color:var(--green);font-weight:700;font-size:0.82rem;margin:2px 0 6px;">fully local · MacBook</div>
+        <div><span class="airgap">air-gapped</span><span style="color:var(--muted);font-size:0.8rem;">code never leaves the laptop</span></div>
+      </div>
+      <div class="card client">
+        <h4>CLIENT · LOCAL WEB</h4>
+        <div class="big">Web Dashboard</div>
+        <div style="color:var(--muted);font-size:0.8rem;">React · risk dial · localhost<br>visual triage · export to CSV</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOUNDATION -->
+  <div class="foundation">
+    <div>
+      <div class="big">YAML Test Case Library · foundation layer</div>
+      <div class="sub">Your test cases. Your risk model. Your repo. — business-owned institutional QA knowledge</div>
+    </div>
+    <span class="git">versioned in git</span>
+  </div>
+
+  <div class="bugnote">★ Caught a real bug on day one — risk score corrected from 30 → 12 after the substring-matching fix was applied and re-scored (facebook/react#34000).</div>
+
+  <div class="foot">
+    <div class="tagline">Catch the right bugs before they ship.</div>
+    <div class="principles">Model-agnostic by architecture · Deterministic and auditable · Regression selection, not scenario generation</div>
+    <div class="built">Built by Ramona Bonitatis · github.com/ramonacraft/testmcp · MIT</div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Running TestMCP on a Local LLM — Setup Guide &amp; Journey</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #181b23;
+    --text: #e8e6e3;
+    --muted: #9a97a0;
+    --accent: #e8935a;
+    --accent2: #7fb4a2;
+    --code-bg: #21242e;
+    --border: #2a2d38;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 48px 24px 96px; }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 32px; margin-bottom: 40px; }
+  h1 { font-size: 2rem; margin: 0 0 8px; }
+  .subtitle { color: var(--muted); font-size: 1.05rem; margin: 0; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-top: 16px; }
+  h2 { font-size: 1.4rem; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--accent); }
+  h3 { font-size: 1.1rem; margin-top: 28px; color: var(--accent2); }
+  p { margin: 12px 0; }
+  code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+  }
+  pre code { background: none; padding: 0; }
+  .callout {
+    background: var(--panel);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 20px 0;
+  }
+  .callout.lesson { border-left-color: var(--accent2); }
+  .callout strong:first-child { color: var(--accent); }
+  .callout.lesson strong:first-child { color: var(--accent2); }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 0.92rem; }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+  th { background: var(--panel); }
+  ol li, ul li { margin: 6px 0; }
+  a { color: var(--accent2); }
+  .toc { background: var(--panel); border-radius: 8px; padding: 20px 28px; }
+  .toc ol { margin: 0; padding-left: 20px; }
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Running TestMCP on a Local LLM</h1>
+  <p class="subtitle">Setup guide &amp; lessons learned — never locked to a closed model</p>
+  <p class="meta">Ramona Bonitatis · July 2026 · Hardware: MacBook M1, 8 GB unified memory</p>
+</header>
+
+<div class="toc">
+  <strong>Contents</strong>
+  <ol>
+    <li><a href="#why">Why I did this</a></li>
+    <li><a href="#concepts">Concepts: ownership, security, what a local LLM is (and isn't)</a></li>
+    <li><a href="#hardware">Hardware reality check</a></li>
+    <li><a href="#ollama">Attempt 1: Ollama (and why I removed it)</a></li>
+    <li><a href="#lmstudio">The setup that stuck: LM Studio + Qwen2.5 7B</a></li>
+    <li><a href="#testmcp">Wiring in TestMCP (the zero-code-change surprise)</a></li>
+    <li><a href="#testing">Testing it</a></li>
+    <li><a href="#usecases">Use cases beyond the demo</a></li>
+    <li><a href="#troubleshooting">Troubleshooting</a></li>
+    <li><a href="#casestudy">Case study: the demo found a real bug</a></li>
+    <li><a href="#skills">Capturing the workflow as AI skills (the plan)</a></li>
+    <li><a href="#shipped">Shipping it: repo, PR, and the merge</a></li>
+    <li><a href="#lessons">Lessons learned</a></li>
+  </ol>
+</div>
+
+<h2 id="why">1. Why I did this</h2>
+<p>I built <strong>TestMCP</strong> — an MCP server (6 tools, 17 mapped functional areas) that analyzes GitHub pull requests and predicts prioritized QA test plans. I wanted two things: to never be locked into a single closed AI vendor, and to be able to demo my product running <em>fully offline</em> — no API keys, no cloud, wifi off.</p>
+<p>In the current market, "model-agnostic" is what enterprise security reviews ask for. A QA platform that runs against Claude, GPT, <em>or</em> an air-gapped local model checks boxes that kill deals when missing. And for me personally, it upgrades the story from "I use AI tools" to "I built an AI product that runs on any model, including air-gapped."</p>
+
+<h2 id="concepts">2. Concepts: ownership, security, and what a local LLM is (and isn't)</h2>
+<h3>Do you own it?</h3>
+<p>You own your copy. Open-weight models (Llama, Qwen, Mistral) are files you download to your disk. Nobody can revoke access, change them remotely, or meter your usage. You don't own the intellectual property — Meta/Alibaba license the models, mostly free for personal and commercial use — but functionally, the model works offline forever.</p>
+<h3>Is it secure?</h3>
+<p>Yes — that's the main selling point. Prompts, documents, and outputs never leave your machine. Nothing is sent to any company's servers. The one caution: only download models from the official sources (LM Studio's built-in catalog, Ollama's library, Hugging Face) — never random websites.</p>
+<h3>What it is NOT</h3>
+<div class="callout">
+<strong>An LLM is a brain, not a server.</strong> It doesn't host websites or serve files. Anything the public visits should live on a proper hosting service (GitHub Pages, Netlify, Vercel — all with free tiers). Exposing your personal computer to the internet is a security risk not worth taking. You can <em>build</em> apps that use your local LLM privately, but public hosting is a separate job.
+</div>
+
+<h2 id="hardware">3. Hardware reality check</h2>
+<p>Unified memory determines what you can run. Apple Silicon shares RAM with the GPU, which makes Macs surprisingly good at this.</p>
+<table>
+  <tr><th>RAM</th><th>Model size that runs well</th><th>Quality expectation</th></tr>
+  <tr><td>8 GB</td><td>3B comfortably; 7–8B (Q4) if you close other apps</td><td>Drafting, summarizing, Q&amp;A, tool calls (7B+)</td></tr>
+  <tr><td>16 GB</td><td>13–14B</td><td>Noticeably better reasoning</td></tr>
+  <tr><td>32 GB+</td><td>30B+</td><td>Approaches older GPT-4-class quality</td></tr>
+</table>
+<div class="callout lesson">
+<strong>Lesson:</strong> On 8 GB, skip anything 13B or larger — it swaps to disk and crawls. And for MCP/tool-calling work specifically, 7B is the floor: 3B models fumble structured tool calls.
+</div>
+
+<h2 id="ollama">4. Attempt 1: Ollama (and why I removed it)</h2>
+<p>My first install was <a href="https://ollama.com">Ollama</a> — free, open source, terminal-based:</p>
+<pre><code>ollama run llama3.2</code></pre>
+<p>It worked great as a chat and as a local OpenAI-compatible API (<code>http://localhost:11434</code>). But my real goal was running <strong>TestMCP</strong> against a local model, and Ollama alone is not an <em>MCP client</em> — it can't drive MCP tools by itself.</p>
+<p>Since LM Studio covers everything Ollama did (chat, local API server) <em>plus</em> acts as an MCP client, keeping both meant duplicate apps and duplicate multi-GB model files on a small disk. I removed Ollama:</p>
+<pre><code># 1. Menu bar llama icon → Quit Ollama
+# 2. Drag Ollama from Applications to Trash
+# 3. Delete the hidden model folder (frees ~2 GB):
+rm -rf ~/.ollama
+
+# Verify it's gone — should say "No such file or directory":
+ls ~/.ollama</code></pre>
+<div class="callout lesson">
+<strong>Lesson:</strong> <code>rm -rf</code> prints nothing on success — silence IS the confirmation. Verify with <code>ls</code> if unsure. Also: pick your end goal first. If I'd known I needed an MCP client, I'd have started with LM Studio and saved a download.
+</div>
+
+<h2 id="lmstudio">5. The setup that stuck: LM Studio + Qwen2.5 7B</h2>
+<ol>
+  <li><strong>Install LM Studio</strong> — download from <a href="https://lmstudio.ai">lmstudio.ai</a>, drag to Applications, launch. Free, no account needed for local use.</li>
+  <li><strong>Download a tool-capable model</strong> — in LM Studio's search tab, get <strong>Qwen2.5 7B Instruct</strong>, Q4 quantization (~4.5 GB). Tool-calling quality is what drives MCP servers, and this is the sweet spot for 8 GB.</li>
+  <li><strong>Load the model and chat</strong> to confirm it works. Close heavy apps (Chrome tabs especially) — a 7B model uses ~5 GB.</li>
+</ol>
+<p>LM Studio also runs a local OpenAI-compatible API server (Developer tab → start server) — so anything you'd have scripted against Ollama works here too.</p>
+
+<h2 id="testmcp">6. Wiring in TestMCP (the zero-code-change surprise)</h2>
+<div class="callout">
+<strong>Key insight:</strong> TestMCP never calls an LLM itself. It's an MCP <em>server</em> — the model always lives on the client side, and the risk engine is rule-based. That means it was already 100% model-agnostic <em>by architecture</em>. Zero code changes needed to swap Claude for a local model.
+</div>
+<p>LM Studio supports MCP servers natively (v0.3.17+). Register TestMCP:</p>
+<ol>
+  <li>In LM Studio: <strong>Program tab → Install → Edit mcp.json</strong> (the file lives at <code>~/.lmstudio/mcp.json</code>)</li>
+  <li>Add the server entry:</li>
+</ol>
+<pre><code>{
+  "mcpServers": {
+    "testmcp": {
+      "command": "/opt/homebrew/bin/node",
+      "args": ["/path/to/testmcp/packages/mcp-server/dist/index.js"],
+      "env": { "GITHUB_TOKEN": "your_github_token_here" }
+    }
+  }
+}</code></pre>
+<p>Notes:</p>
+<ul>
+  <li><strong>Use the absolute path to <code>node</code>, not just <code>"node"</code>.</strong> LM Studio is a GUI app and doesn't inherit your Terminal's <code>PATH</code>, so a bare <code>"node"</code> often resolves to nothing and the server hangs on "Initializing plugin…". Run <code>which node</code> and paste the full path — Homebrew on Apple Silicon is <code>/opt/homebrew/bin/node</code>.</li>
+  <li>Replace <code>/path/to/testmcp</code> with your actual repo path. Run <code>npm run build</code> first so <code>dist/index.js</code> exists.</li>
+  <li><code>GITHUB_TOKEN</code> is only required for private repos — public repos work unauthenticated (rate-limited).</li>
+  <li>Save the file (Cmd+S) and LM Studio loads the server automatically.</li>
+</ul>
+
+<h2 id="testing">7. Testing it</h2>
+<p>In an LM Studio chat with Qwen2.5 7B loaded and the TestMCP integration enabled, ask:</p>
+<pre><code>Analyze facebook/react#34000 for QA risk.</code></pre>
+<p>The model should invoke <code>testmcp_analyze_pr</code>, and TestMCP returns the risk score, impacted functional areas, and factors. This PR is the standing smoke test: it should come back <strong>LOW (~12/100) with no functional areas matched</strong> — the correct answer for an internal compiler change. If it scores higher or flags an area like <em>ads</em>, a substring-matching regression has crept back in (see §10). Follow up with a request for the full prioritized test plan (<code>testmcp_generate_test_plan</code>).</p>
+<p><strong>The demo:</strong> same MCP server working in Claude Desktop <em>and</em> in LM Studio with wifi turned off. That's model-agnostic, proven live.</p>
+
+<h2 id="usecases">8. Use cases beyond the demo</h2>
+<ul>
+  <li><strong>Free development backend</strong> — hammer TestMCP with unlimited test calls during development without paying API fees; ship with Claude/GPT for production quality.</li>
+  <li><strong>Sensitive document work</strong> — summarize or question anything you don't want leaving your machine.</li>
+  <li><strong>Job search drafting</strong> — unlimited, private iteration on resumes and cover letters.</li>
+  <li><strong>Bulk text tasks</strong> — classifying, tagging, reformatting many small items; small models excel at high-volume, low-complexity work.</li>
+  <li><strong>Offline fallback</strong> — planes, outages, bad wifi.</li>
+</ul>
+<p>What local models on 8 GB are <em>not</em> good for: complex reasoning, very long documents, anything where quality matters more than privacy or cost. Use frontier cloud models for those.</p>
+
+<h2 id="troubleshooting">9. Troubleshooting</h2>
+<table>
+  <tr><th>Symptom</th><th>Fix</th></tr>
+  <tr><td>Model runs extremely slowly / Mac freezes</td><td>Model too big for RAM. Use a smaller model or lower quantization (Q4). Close other apps.</td></tr>
+  <tr><td>Model chats fine but never calls MCP tools</td><td>Model too small or not tool-trained. Use a 7B+ instruct model (Qwen2.5 7B Instruct works). Check the integration is toggled on for the chat.</td></tr>
+  <tr><td>TestMCP doesn't appear in LM Studio</td><td>Validate mcp.json syntax (a missing comma breaks it), confirm the path to <code>dist/index.js</code> exists, and run <code>npm run build</code>.</td></tr>
+  <tr><td>MCP server stuck on "Initializing plugin..."</td><td>Two-part fix that got me: (1) GUI apps don't inherit your Terminal's PATH, so <code>"command": "node"</code> may find nothing — run <code>which node</code> and use the absolute path (e.g. <code>/opt/homebrew/bin/node</code>). (2) Actually hit Cmd+S in the mcp.json editor — the config only reloads on save.</td></tr>
+  <tr><td>GitHub rate-limit errors</td><td>Add a <code>GITHUB_TOKEN</code> to the env block in mcp.json.</td></tr>
+  <tr><td>Wrong facts / hallucinated details</td><td>Expected at this size — small models draft, humans verify. Keep tasks narrow.</td></tr>
+</table>
+
+<h2 id="casestudy">10. Case study: the demo found a real bug</h2>
+<p>The very first local run paid for itself. Analyzing <code>facebook/react#34000</code> (a React compiler PR), TestMCP scored it <strong>MEDIUM 30/100</strong> and flagged the <em>ads</em> functional area — on a PR that has nothing to do with advertising.</p>
+<p>Root cause was a two-part substring bug:</p>
+<ul>
+  <li>The glob <code>**/*ima*</code> (meant for Google's IMA ad SDK) matched <code>rean<strong>ima</strong>ted-no-memo-arg.js</code> in the changed files.</li>
+  <li>The keyword matcher used a raw <code>prose.includes("ads")</code>, which finds "ads" inside "loads", "uploads", etc.</li>
+</ul>
+<p>The fix: word-boundary regex matching for keywords, and segment-boundary globs (<code>**/ima[-._]*</code>, <code>**/*[-._]ima[-._]*</code>) for file patterns — verified with a 14-case regression test before redeploying. Rerunning the same PR: <strong>LOW 12/100, no areas matched</strong>, which is the correct answer for an internal compiler change with 9 test files.</p>
+<div class="callout lesson">
+<strong>Lesson:</strong> a demo that surfaces a bug you then diagnose, fix, and verify is a better story than a flawless demo — that loop <em>is</em> the QA discipline the tool exists to support. Also: every substring matcher is a false positive waiting to happen; audit classifier patterns for word/segment boundaries early.
+</div>
+
+<h2 id="skills">11. Capturing the workflow as AI skills (the plan)</h2>
+<p>Working with an AI assistant on this project raised a good question: should the project get its own <em>skill</em> (a reusable, saved procedure the assistant follows)? The distinction that clarified it:</p>
+<ul>
+  <li><strong>Memory</strong> holds <em>facts</em> about the project — architecture, decisions, where things live. Cheap to maintain, always current.</li>
+  <li><strong>A skill</strong> captures a <em>repeatable procedure</em> — checklists, conventions, exact steps — worth writing only once the workflow has stabilized.</li>
+</ul>
+<div class="callout lesson">
+<strong>Rule of thumb:</strong> create the skill <em>after</em> the procedure works end-to-end but <em>before</em> you forget the gotchas. Writing it earlier freezes half-formed decisions; writing it later loses the hard-won details.
+</div>
+<p>Two skills planned for this project once the demo runs end-to-end:</p>
+<ol>
+  <li><strong>testmcp-dev</strong> — repo conventions, how to test against LM Studio vs. cloud models, build/release checklist. Trigger: catching myself explaining the same process twice.</li>
+  <li><strong>testmcp-demo-prep</strong> — the exact live-demo runbook: which repo and PR to use, talking points, and the fallback plan if the model or wifi misbehaves mid-interview.</li>
+</ol>
+
+<h2 id="shipped">12. Shipping it: repo, PR, and the merge</h2>
+<p>The fix didn't stay on my laptop. Full loop, done properly:</p>
+<ol>
+  <li><strong>Dedicated repo.</strong> TestMCP started life inside a general workspace repo; I gave it its own public repo (<code>ramonacraft/testmcp</code>). One project, one repo, one clear story for anyone reading it.</li>
+  <li><strong>Branch → commit → push.</strong> Work done on <code>feature/testmcp</code>, committed with a message that explains the <em>why</em> (the demo catch, the root cause, the verification), pushed with <code>-u</code> to track the remote.</li>
+  <li><strong>Pre-publish secret scan.</strong> <code>git grep -i "ghp_"</code> before pushing a public repo. My hits were all <code>ghp_yourtoken</code> placeholders in the README, which is exactly what should be there.</li>
+  <li><strong>PR with the story.</strong> Even solo, the pull request documents bug → root cause → fix → verification where recruiters and collaborators can see it.</li>
+</ol>
+<div class="callout lesson">
+<strong>Gotcha:</strong> if GitHub says "there isn't anything to compare, entirely different commit histories," your branch was pushed to a repo whose main doesn't share your project's history. Don't force-merge unrelated histories. Give the project its own repo.
+</div>
+<h3>A product decision made along the way</h3>
+<p>Cut TestRail and Xray export adapters from the roadmap. TestMCP's YAML test library <em>is</em> the test case management layer — plain files, diffable, living next to the code they test. Bolting on a third-party TCM tool would undercut the whole premise. Jira integration stays, but scoped to bug and task workflow, not test management.</p>
+
+<h2 id="lessons">13. Lessons learned</h2>
+<ul>
+  <li><strong>Local = ownership.</strong> Downloaded weights can't be revoked, metered, or changed under you. That was the whole point.</li>
+  <li><strong>Privacy is structural, not a policy.</strong> Data can't leak to a server it's never sent to.</li>
+  <li><strong>Architecture beats configuration.</strong> Building on MCP made TestMCP model-agnostic before I ever thought about local models — the protocol keeps the model on the client side.</li>
+  <li><strong>Match tools to the goal.</strong> Ollama is great for CLI/API workflows; LM Studio is the move when you need an MCP client with a GUI. I didn't need both.</li>
+  <li><strong>Small hardware forces good habits.</strong> 8 GB made me learn quantization, model sizing, and where the quality floor for tool-calling sits (7B).</li>
+  <li><strong>The career story writes itself.</strong> "Enterprise-ready" claims are cheap; demoing your product against an air-gapped model with wifi off is proof.</li>
+</ul>
+
+<footer>
+Written as part of the TestMCP project — an AI QA prediction layer for GitHub pull requests (MCP server + dashboard). MIT licensed.
+</footer>
+
+</div>
+</body>
+</html>
