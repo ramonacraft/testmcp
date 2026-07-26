@@ -4,6 +4,17 @@ TestMCP sees what to test before it ships. It analyzes what a pull request actua
 
 Built for web, mobile (iOS/Android), and CTV app teams.
 
+## How the flow works
+
+![How TestMCP turns a PR into a prioritized test plan](docs/flow.png)
+
+| Step | Color | What it is |
+|------|-------|------------|
+| **1. GitHub PR** | Blue | Changed files from the pull request |
+| **2. Predict risk** | Amber | Classify areas + score 0–100 |
+| **3. P0–P3 plan** | Teal | YAML test library cases to verify |
+| **4. Two faces** | Green | MCP tools (Cursor) + web dashboard |
+
 ## Structure
 
 ```
@@ -29,10 +40,11 @@ npm install
 npm run build
 
 # Web dashboard → http://localhost:4173
-GITHUB_TOKEN=ghp_yourtoken npm run web
+# Optional: export GITHUB_TOKEN for private repos / higher rate limits
+npm run web
 
-# MCP server (stdio)
-GITHUB_TOKEN=ghp_yourtoken npm run mcp
+# MCP server (stdio) — same optional token
+npm run mcp
 ```
 
 ### GitHub token
@@ -53,7 +65,7 @@ Register with Claude Code:
 
 ```bash
 claude mcp add testmcp \
-  --env GITHUB_TOKEN=ghp_yourtoken \
+  --env GITHUB_TOKEN=your_github_token \
   -- node /absolute/path/to/testmcp/packages/mcp-server/dist/index.js
 ```
 
@@ -65,7 +77,7 @@ Claude Desktop / Cursor config:
     "testmcp": {
       "command": "node",
       "args": ["/absolute/path/to/testmcp/packages/mcp-server/dist/index.js"],
-      "env": { "GITHUB_TOKEN": "ghp_yourtoken" }
+      "env": { "GITHUB_TOKEN": "your_github_token" }
     }
   }
 }
@@ -93,6 +105,13 @@ Tools: `testmcp_analyze_pr`, `testmcp_generate_test_plan`, `testmcp_list_test_ca
 - Jira integration: create/link bugs and test tasks from a plan (TestMCP's YAML library IS the test case management layer — no third-party TCM by design)
 - Execution tracking: pass/fail per case, release-readiness rollup
 
----
+## Notes / Privacy
 
-*TestMCP v0.2.0 — created by Ramona Bonitatis. MIT license.*
+- **Published by** [Ramona Bonitatis](https://github.com/ramonacraft).
+- **Default: no secrets.** The dashboard and MCP server run without a token for public repos (rate-limited). `.env.example` has no real tokens.
+- Put `GITHUB_TOKEN` only in your local shell, Cursor MCP config, or host secrets — never commit it.
+- Do not commit private employer test libraries or customer data into this public repo.
+
+## License
+
+MIT — Ramona Bonitatis
