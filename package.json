@@ -14,6 +14,10 @@
   "engines": {
     "node": ">=18"
   },
+  "overrides": {
+    "ip-address": "10.3.1",
+    "fast-uri": "3.1.5"
+  },
   "author": "Ramona Bonitatis",
   "license": "MIT"
 }
