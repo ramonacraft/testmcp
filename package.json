@@ -16,7 +16,14 @@
   },
   "overrides": {
     "ip-address": "10.3.1",
-    "fast-uri": "3.1.5"
+    "fast-uri": "3.1.5",
+    "body-parser@^1": "1.20.6",
+    "body-parser@^2": "2.3.0",
+    "brace-expansion": "5.0.9",
+    "postcss": "8.5.26",
+    "hono": "4.13.2",
+    "@hono/node-server": "1.19.17",
+    "nanoid": "3.3.18"
   },
   "author": "Ramona Bonitatis",
   "license": "MIT"
