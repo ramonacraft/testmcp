@@ -15,12 +15,12 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@octokit/rest": "^21.0.2",
-    "minimatch": "^10.0.1",
-    "yaml": "^2.6.1"
+    "@octokit/rest": "^22.0.1",
+    "minimatch": "^10.2.6",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "typescript": "^5.7.2"
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2"
   }
 }
