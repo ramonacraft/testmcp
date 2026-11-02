@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@octokit/rest": "^21.0.2",
-    "minimatch": "^10.0.1",
+    "minimatch": "11.0.1",
     "yaml": "^2.6.1"
   },
   "devDependencies": {
